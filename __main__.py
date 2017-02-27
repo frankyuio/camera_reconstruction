@@ -7,10 +7,13 @@ from os import path
 import qr
 import plot
 
+script_dir = path.dirname(path.realpath(__file__))
+images_path = path.join(script_dir, 'images')
+
 # Cycling through images
 for i in range (19, 28):
 	# Load and preprocess image
-	img_path = path.join('images', 'IMG_67'+ str(i) + '.JPG')
+	img_path = path.join(images_path, 'IMG_67'+ str(i) + '.JPG')
 	img = cv2.imread(img_path, 0)
 	img = cv2.resize(img, (612, 816)) # reducing size to minimize computations
 
