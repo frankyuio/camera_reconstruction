@@ -18,3 +18,6 @@ py -2 .
 1. Process image and identify points on the image that can be mapped to points in real life.
 2. Use image coordinates and real life coordinates to establish a relationship between camera and image
 3. Plot the image and camera position.
+
+## Demonstration
+![alt text](https://github.com/QFrankY/camera_reconstruction/blob/master/demo.png "Camera Reconstruction Demo")
