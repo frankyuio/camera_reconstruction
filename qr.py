@@ -15,88 +15,88 @@ X----------Y
 Z-----------
 """
 
-def __mapAlignmentMarker(markers):
-	""" Finds alignment marker using contour area """
-	minVal = 0
-	minIndex = 0
-	for i in range(len(markers)):
-		if minVal == 0 or markers[i][2] < minVal:
-			minIndex = i
-			minVal = markers[i][2]
+def __map_alignment_marker(markers):
+    """ Finds alignment marker using contour area """
+    min_val = 0
+    min_index = 0
+    for i, item in enumerate(markers):
+        if min_val == 0 or markers[i][2] < min_val:
+            min_index = i
+            min_val = markers[i][2]
 
-	A = markers[minIndex] # Alignment marker is the smallest
-	del markers[minIndex] # remove alignment marker from unmapped list
-	return A
+    align_marker = markers[min_index] # Alignment marker is the smallest
+    del markers[min_index] # remove alignment marker from unmapped list
+    return align_marker
 
-def __mapPositionXMarker (A, markers):
-	""" Uses angles between alignment and position markers to find X """
-	a1 = np.arctan2(A[1] - markers[0][1], markers[0][0] - A[0])
-	a2 = np.arctan2(A[1] - markers[1][1], markers[1][0] - A[0])
-	a3 = np.arctan2(A[1] - markers[2][1], markers[2][0] - A[0])
+def __map_position_x_marker(align_marker, markers):
+    """ Uses angles between alignment and position markers to find X """
+    angle_1 = np.arctan2(align_marker[1] - markers[0][1], markers[0][0] - align_marker[0])
+    angle_2 = np.arctan2(align_marker[1] - markers[1][1], markers[1][0] - align_marker[0])
+    angle_3 = np.arctan2(align_marker[1] - markers[2][1], markers[2][0] - align_marker[0])
 
-	# Finding the relative internal angles between the three position markers
-	a12 = 2 * np.pi - abs(a1 - a2) if abs(a1 - a2) > np.pi else abs(a1 - a2)
-	a13 = 2 * np.pi - abs(a1 - a3) if abs(a1 - a3) > np.pi else abs(a1 - a3)
-	a23 = 2 * np.pi - abs(a2 - a3) if abs(a2 - a3) > np.pi else abs(a2 - a3)
+    # Finding the relative internal angles between the three position markers
+    a12 = 2 * np.pi - abs(angle_1 - angle_2) if abs(angle_1 - angle_2) > np.pi else abs(angle_1 - angle_2)
+    a13 = 2 * np.pi - abs(angle_1 - angle_3) if abs(angle_1 - angle_3) > np.pi else abs(angle_1 - angle_3)
+    a23 = 2 * np.pi - abs(angle_2 - angle_3) if abs(angle_2 - angle_3) > np.pi else abs(angle_2 - angle_3)
 
-	# Angle YAZ will be greater than angles XAY and XAZ.
-	# Hence X, Y, Z can be determined using angles.
-	if abs(a12) > abs(a13) and abs(a12) > abs(a23):
-		X = markers[2]
-		del markers[2]
-	elif abs(a13) > abs(a12) and abs(a13) > abs(a23):
-		X = markers[1]
-		del markers[1]
-	else:
-		X = markers[0]
-		del markers[0]
+    # Angle YAZ will be greater than angles XAY and XAZ.
+    # Hence X, Y, Z can be determined using angles.
+    if abs(a12) > abs(a13) and abs(a12) > abs(a23):
+        marker_x = markers[2]
+        del markers[2]
+    elif abs(a13) > abs(a12) and abs(a13) > abs(a23):
+        marker_x = markers[1]
+        del markers[1]
+    else:
+        marker_x = markers[0]
+        del markers[0]
 
-	return X
+    return marker_x
 
-def __mapMarkers(markers):
-	"""  Maps markers to X, Y, Z, A """
-	A = __mapAlignmentMarker(markers)
-	X = __mapPositionXMarker(A, markers)
+def __map_markers(markers):
+    """  Maps markers to X, Y, Z, A """
+    align_marker = __map_alignment_marker(markers)
+    marker_x = __map_position_x_marker(align_marker, markers)
 
-	# Determining Z and Y from remaining markers
-	aX = np.arctan2(A[1] - X[1], X[0] - A[0])
-	aX = aX if aX > 0 else aX + 2 * np.pi
-	a1 = np.arctan2(A[1] - markers[0][1], markers[0][0] - A[0])
-	a1 = a1 if a1 > 0 else a1 + 2 * np.pi
+    # Determining Z and Y from remaining markers
+    angle_x = np.arctan2(align_marker[1] - marker_x[1], marker_x[0] - align_marker[0])
+    angle_x = angle_x if angle_x > 0 else angle_x + 2 * np.pi
+    angle = np.arctan2(align_marker[1] - markers[0][1], markers[0][0] - align_marker[0])
+    angle = angle if angle > 0 else angle + 2 * np.pi
 
-	# YA is clockwise from XA
-	diff = aX - a1 if aX - a1 > 0 else aX - a1 + 2 * np.pi
-	if diff < np.pi:
-		Y = markers[0]
-		Z = markers[1]
-	else:
-		Z = markers[0]
-		Y = markers[1]
+    # YA is clockwise from XA
+    diff = angle_x - angle if angle_x - angle > 0 else angle_x - angle + 2 * np.pi
+    if diff < np.pi:
+        marker_y = markers[0]
+        marker_z = markers[1]
+    else:
+        marker_z = markers[0]
+        marker_y = markers[1]
 
-	# returning marker positions
-	return (X[0:2], Y[0:2], Z[0:2], A[0:2])
+    # returning marker positions
+    return (marker_x[0:2], marker_y[0:2], marker_z[0:2], align_marker[0:2])
 
-def findMarkers(img):
-	""" Finding and Mapping QR marker coordinates """
+def find_markers(img):
+    """ Finding and Mapping QR marker coordinates """
 
-	# Detecting contours in the image
-	img, contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, 
-														cv2.CHAIN_APPROX_SIMPLE)
+    # Detecting contours in the image
+    img, contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE,
+                                                cv2.CHAIN_APPROX_SIMPLE)
 
-	# Use contour hierarchy to locate the 3 position markers and alignment marker
-	markers = []
-	for h in hierarchy[0]:
-		# After applying threshold, outermost contour (0) is the paper
-		# All four markers are contained in contours with non 0 parents
-		if h[2] > 0 and h[3] > 0:
-			# Appending marker location and size info
-			marker = contours[h[2]] # marker is the child of the contour found
-			M = cv2.moments(marker)
-			cx = int(M['m10']/M['m00']) # marker x coordinate
-			cy = int(M['m01']/M['m00']) # marker y coordinate
-			area = cv2.contourArea(marker)
-			markers.append((cx, cy, area))
+    # Use contour hierarchy to locate the 3 position markers and alignment marker
+    markers = []
+    for item in hierarchy[0]:
+        # After applying threshold, outermost contour (0) is the paper
+        # All four markers are contained in contours with non 0 parents
+        if item[2] > 0 and item[3] > 0:
+            # Appending marker location and size info
+            contour = contours[item[2]] # marker is the child of the contour found
+            marker = cv2.moments(contour)
+            marker_x = int(marker['m10']/marker['m00']) # marker x coordinate
+            marker_y = int(marker['m01']/marker['m00']) # marker y coordinate
+            area = cv2.contourArea(contour)
+            markers.append((marker_x, marker_y, area))
 
-	X, Y, Z, A = __mapMarkers(markers)
+    marker_x, marker_y, marker_z, align_marker = __map_markers(markers)
 
-	return (X, Y, Z, A)
+    return (marker_x, marker_y, marker_z, align_marker)
