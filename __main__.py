@@ -19,7 +19,7 @@ for i in range(19, 28):
 
     # Applying threshold to bring out paper and QR code from carpet background
     blur = cv2.GaussianBlur(img, (3, 3), 0) # Used to smooth the image
-    ret, img = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    ret, otsu = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     """
     Assume a QR code is oriented as such where X, Y, Z are position markers and
@@ -33,7 +33,7 @@ for i in range(19, 28):
     """
 
     # Finding marker locations
-    marker_x, marker_y, marker_z, align_marker = qr.find_markers(img)
+    marker_x, marker_y, marker_z, align_marker = qr.find_markers(np.array(otsu, copy=True))
 
     """
     Defining real world coordinates of QR pattern markers.
@@ -89,10 +89,10 @@ for i in range(19, 28):
         print '\nClose plot to move onto next image\n'
 
     # Showcasing processed image with markers labeled along with 3D plot
-    img = cv2.circle(img, marker_x, 1, (255, 255, 255), 3)
-    img = cv2.circle(img, marker_y, 1, (150, 150, 150), 3)
-    img = cv2.circle(img, marker_z, 1, (60, 60, 60), 3)
-    img = cv2.circle(img, align_marker, 1, (127, 127, 127), 3)
+    otsu = cv2.circle(otsu, marker_x, 1, (255, 255, 255), 3)
+    otsu = cv2.circle(otsu, marker_y, 1, (150, 150, 150), 3)
+    otsu = cv2.circle(otsu, marker_z, 1, (60, 60, 60), 3)
+    otsu = cv2.circle(otsu, align_marker, 1, (127, 127, 127), 3)
 
-    cv2.imshow('image', img)
+    cv2.imshow('image', otsu)
     plot.show_camera(r_matrix, c_matrix)
